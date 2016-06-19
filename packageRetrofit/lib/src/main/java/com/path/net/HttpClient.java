@@ -7,6 +7,7 @@ import com.path.utils.StringUtil;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import okhttp3.ResponseBody;
@@ -29,6 +30,10 @@ public class HttpClient {
 
     }
 
+    /**
+     * post请求
+     * @param onResultListener
+     */
     public void post(final OnResultListener onResultListener) {
         if (onResultListener.onCache(ACache.get().getAsString(cacheKey))) return;
 
@@ -41,7 +46,42 @@ public class HttpClient {
                 .build()
                 .create(Params.class)
                 .params(mBuilder.url, mBuilder.params);
+        request(onResultListener);
+    }
 
+    /**
+     * get请求
+     * @param onResultListener
+     */
+    public void get(final OnResultListener onResultListener){
+        if (onResultListener.onCache(ACache.get().getAsString(cacheKey))) return;
+
+        if (!AppUtil.isNetworkAvailable()) {
+            onResultListener.onFailure("无法连接网络");
+            return;
+        }
+        if (!mBuilder.params.isEmpty()){
+            String value="";
+            String span="";
+            Iterator iter = mBuilder.params.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry entry = (Map.Entry) iter.next();
+                String key = (String) entry.getKey();
+                String val = (String) entry.getValue();
+                if (!value.equals(""))span="&";
+                String par=StringUtil.buffer(span,key,"=",val);
+                value=StringUtil.buffer(value,par);
+            }
+            mBuilder.url(StringUtil.buffer(mBuilder.url,"?",value));
+        }
+        mCall = new Retrofit.Builder()
+                .baseUrl(mBuilder.baseUrl)
+                .build()
+                .create(Params.class)
+                .params(mBuilder.url);
+       request(onResultListener);
+    }
+    private void request(final OnResultListener onResultListener){
         mCall.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
@@ -58,16 +98,16 @@ public class HttpClient {
                     else if (response.code() > 500) onResultListener.onFailure("服务器繁忙，请稍后重试");
 
                 }
-
+                onResultListener.onFinish();
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
                 onResultListener.onFailure("网络繁忙，请稍后重试！");
+                onResultListener.onFinish();
             }
 
         });
-
     }
 
     /**

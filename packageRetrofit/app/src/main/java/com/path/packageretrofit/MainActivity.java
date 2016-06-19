@@ -26,22 +26,22 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         client.post(new OnResultListener() {
             @Override
-            public boolean onCache(String cache) {
+            public boolean onCache(String cache) {//缓存数据，返回true表示不再请求网络
                 return false;
             }
 
             @Override
-            public void onSuccess(String result) {
+            public void onSuccess(String result) {//请求结果
                 mTvTest.setText(result);
             }
 
             @Override
-            public void onFailure(String message) {
+            public void onFailure(String message) {//请求失败的说明
                 mTvTest.setText(message);
             }
 
             @Override
-            public void onFinish() {
+            public void onFinish() {//请求结束
 
             }
         });
