@@ -7,18 +7,24 @@
   1.initialization
   
    <code>
+
 public class myApplicatioon extends Application {
+
     @Override
     public void onCreate() {
         super.onCreate();
         JinLib.initialize(this);//初始化lib
     }
+
 }
+
 </code>
 
 2.use
 <code>
+
    HttpClient client=new HttpClient.Builder()
+
                 .baseUrl("http://xiaohua.hao.360.cn")//这个如果设置了NetConfig.baseUrl 此处可以不用重新调用baseUrl
                 .url("/m/itxt")
                 .param("callback","jsonp7")//多个param，可以重复调用此方法
@@ -44,4 +50,5 @@ public class myApplicatioon extends Application {
 
             }
         });
+
 </code>
