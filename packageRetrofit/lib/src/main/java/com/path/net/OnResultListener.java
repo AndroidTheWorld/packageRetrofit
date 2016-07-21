@@ -6,7 +6,7 @@ package com.path.net;
 /**
  * Created by Jin on 2016/5/6.
  */
-public abstract class OnResultListener<T> {
+public class OnResultListener<T> {
     public boolean onCache(String cache) {//返回true,表示不再请求网络
         return false;
     }

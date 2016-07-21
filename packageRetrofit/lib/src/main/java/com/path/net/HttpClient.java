@@ -64,9 +64,7 @@ public class HttpClient {
         if (onResultListener.onCache(mCache)) return;
         if (parseCache(mCache,onResultListener)) return;
         if (!AppUtil.isNetworkAvailable()) {
-            onResultListener.onFailure("无法连接网络");
-            onResultListener.onFailure(mCache,"无法连接网络");
-            parseFails(mCache,"无法连接网络",onResultListener);
+            handlerError("无法连接网络",onResultListener);
             return;
         }
         mCall =retrofit.create(Params.class)
@@ -85,9 +83,7 @@ public class HttpClient {
         if (parseCache(mCache,onResultListener)) return;
 
         if (!AppUtil.isNetworkAvailable()) {
-            onResultListener.onFailure("无法连接网络");
-            onResultListener.onFailure(mCache,"无法连接网络");
-            parseFails(mCache,"无法连接网络",onResultListener);
+            handlerError("无法连接网络",onResultListener);
             return;
         }
         if (!mBuilder.params.isEmpty()){
@@ -107,6 +103,11 @@ public class HttpClient {
                 .params(mBuilder.url);
        request(onResultListener);
     }
+
+    /**
+     * 文件上传
+     * @param onProgressListener
+     */
     public void upload(OnProgressListener onProgressListener){
         Map<String,RequestBody> requestBody=new ArrayMap<>();
 
@@ -148,20 +149,26 @@ public class HttpClient {
                         e.printStackTrace();
                     }
                 } else {
-                    if (response.code() > 400) onResultListener.onFailure(mCache,"请求数据失败！");
-                    else if (response.code() > 500) onResultListener.onFailure(mCache,"服务器繁忙，请稍后重试");
-
+                    
+                    if (response.code() > 400) handlerError("请求数据失败！",onResultListener);
+                    else if (response.code() > 500) handlerError("服务器繁忙，请稍后重试",onResultListener);
                 }
                 onResultListener.onFinish();
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
-                onResultListener.onFailure(mCache,"网络繁忙，请稍后重试！");
+                handlerError("网络繁忙，请稍后重试！",onResultListener);
                 onResultListener.onFinish();
             }
 
         });
+    }
+
+    private void handlerError(String message,OnResultListener onResultListener){
+        onResultListener.onFailure(message);
+        onResultListener.onFailure(mCache,message);
+        parseFails(mCache,message,onResultListener);
     }
 
     @SuppressWarnings("unchecked")
