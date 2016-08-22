@@ -1,5 +1,7 @@
 package com.path.net;
 
+import android.util.Log;
+
 import java.io.File;
 import java.io.IOException;
 
@@ -16,6 +18,15 @@ import okio.Sink;
  */
 public class UploadRequestBody extends RequestBody {
 
+    private static final String MEDIATYPE_PNG="image/png";
+    private static final String MEDIATYPE_JPG="image/jpeg";
+    private static final String MEDIATYPE_GIF="image/gif";
+    private static final String MEDIATYPE_MP4="video/mp4";
+    private static final String MEDIATYPE_3GP="video/3gpp";
+    private static final String MEDIATYPE_AVI="video/x-msvideo";
+    private static final String MEDIATYPE_MP3="audio/x-mpeg";
+    private static final String MEDIATYPE_WAV="audio/x-wav";
+
     private RequestBody mRequestBody;
     private OnProgressListener mProgressListener;
 
@@ -23,7 +34,9 @@ public class UploadRequestBody extends RequestBody {
 
 
     public UploadRequestBody(File file , OnProgressListener progressListener) {
-        this.mRequestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file) ;
+        MediaType contentType=createContentType(file.getPath());
+        Log.i("上传的 MediaType name is",contentType.toString());
+        this.mRequestBody = RequestBody.create(contentType, file);
         this.mProgressListener = progressListener ;
     }
 
@@ -33,6 +46,26 @@ public class UploadRequestBody extends RequestBody {
         this.mProgressListener = progressListener;
     }
 
+    private MediaType createContentType(String url){
+        if (url.endsWith(".png")){
+            return MediaType.parse(MEDIATYPE_PNG);
+        }else if (url.endsWith(".jpg")){
+            return MediaType.parse(MEDIATYPE_JPG);
+        }else if (url.endsWith(".gif")){
+            return MediaType.parse(MEDIATYPE_GIF);
+        }else if (url.endsWith(".mp4")){
+            return MediaType.parse(MEDIATYPE_MP4);
+        }else if (url.endsWith(".3gp")){
+            return MediaType.parse(MEDIATYPE_3GP);
+        }else if (url.endsWith(".avi")){
+            return MediaType.parse(MEDIATYPE_AVI);
+        }else if (url.endsWith(".mp3")){
+            return MediaType.parse(MEDIATYPE_MP3);
+        }else if (url.endsWith(".wav")){
+            return MediaType.parse(MEDIATYPE_WAV);
+        }
+        return MediaType.parse("multipart/form-data");
+    }
 
     @Override
     public MediaType contentType() {

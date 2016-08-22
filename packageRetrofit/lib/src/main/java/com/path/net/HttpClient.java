@@ -3,6 +3,7 @@ package com.path.net;
 
 
 import android.support.v4.util.ArrayMap;
+import android.util.Log;
 
 import com.alibaba.fastjson.JSONObject;
 import com.path.cache.ACache;
@@ -17,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.OkHttpClient;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -27,6 +27,8 @@ import retrofit2.Retrofit;
  * Created by Jin on 2016/5/19.
  */
 public class HttpClient {
+    public static String BASE_URL="";
+    private static HttpClient mInstance;
     private Call<ResponseBody> mCall;
     private Builder mBuilder;
     private String cacheKey;
@@ -36,23 +38,34 @@ public class HttpClient {
 
     private static Retrofit retrofit;
 
-    public HttpClient(Builder builder) {
+    public static HttpClient getInstance() {
+        if (mInstance==null){
+            synchronized (HttpClient.class){
+                if (mInstance==null){
+                    mInstance=new HttpClient();
+                }
+            }
+        }
+        return mInstance;
+    }
+
+    public HttpClient() {
+        OkHttpClient client = new OkHttpClient();
+        client.newBuilder().connectTimeout(7000, TimeUnit.MILLISECONDS);
+        retrofit=new Retrofit.Builder()
+                .baseUrl(BASE_URL)
+                .client(client)
+                .build();
+    }
+
+    public Builder getBuilder() {
+        return mBuilder;
+    }
+
+    public void setBuilder(Builder builder) {
         this.mBuilder = builder;
         this.cacheKey = StringUtil.buffer(builder.url, builder.params.toString());
         mCache=ACache.get().getAsString(cacheKey);
-        if (retrofit == null){
-            synchronized(HttpClient.class){
-                OkHttpClient client = new OkHttpClient();
-                client.newBuilder().connectTimeout(7000, TimeUnit.MILLISECONDS);
-              //  HttpLoggingInterceptor logging=new HttpLoggingInterceptor();
-            //    logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-                retrofit=new Retrofit.Builder()
-                        .baseUrl(mBuilder.baseUrl)
-                        .client(client)
-                        .build();
-            }
-        }
     }
 
     /**
@@ -105,9 +118,10 @@ public class HttpClient {
     }
 
     /**
-     * 文件上传
+     * 文件上传  有bug,未解决
      * @param onProgressListener
      */
+    @Deprecated
     public void upload(OnProgressListener onProgressListener){
         Map<String,RequestBody> requestBody=new ArrayMap<>();
 
@@ -117,16 +131,16 @@ public class HttpClient {
         }
 
         mCall=retrofit.create(Params.class)
-                .params(mBuilder.params,requestBody);
+                .params(mBuilder.url,mBuilder.params,requestBody);
         mCall.enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-
+                Log.i("上传成功","code="+response.code());
             }
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
-
+                t.printStackTrace();
             }
         });
 
@@ -149,7 +163,7 @@ public class HttpClient {
                         e.printStackTrace();
                     }
                 } else {
-                    
+
                     if (response.code() > 400) handlerError("请求数据失败！",onResultListener);
                     else if (response.code() > 500) handlerError("服务器繁忙，请稍后重试",onResultListener);
                 }
@@ -259,7 +273,10 @@ public class HttpClient {
         }
 
         public HttpClient build() {
-            return new HttpClient(this);
+            BASE_URL=baseUrl;
+            HttpClient httpClient= HttpClient.getInstance();
+            httpClient.setBuilder(this);
+            return httpClient;
         }
     }
 

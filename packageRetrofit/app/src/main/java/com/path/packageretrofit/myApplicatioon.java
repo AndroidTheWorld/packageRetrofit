@@ -2,6 +2,7 @@ package com.path.packageretrofit;
 
 import android.app.Application;
 
+import com.path.base.AppContext;
 import com.path.base.JinLib;
 
 /**
@@ -12,5 +13,6 @@ public class myApplicatioon extends Application {
     public void onCreate() {
         super.onCreate();
         JinLib.initialize(this);//初始化lib
+        AppContext.initialize(this);
     }
 }
